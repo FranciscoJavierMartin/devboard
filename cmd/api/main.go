@@ -4,17 +4,15 @@ package main
 import (
 	"log"
 	"log/slog"
-	"os"
 
 	"github.com/FranciscoJavierMartin/devboard/internal/handler"
+	"github.com/FranciscoJavierMartin/devboard/internal/logger"
 	"github.com/FranciscoJavierMartin/devboard/internal/middlewares"
 	"github.com/FranciscoJavierMartin/devboard/internal/server"
 )
 
 func main() {
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		Level: slog.LevelInfo,
-	}))
+	logger := logger.New(logger.DefaultConfig())
 
 	srv := server.New(":8080")
 
