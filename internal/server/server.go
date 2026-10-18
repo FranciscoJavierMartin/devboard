@@ -32,3 +32,11 @@ func New(addr string) *Server {
 func (server *Server) Start() error {
 	return server.httpServer.ListenAndServe()
 }
+
+func (server *Server) RegisterRoutes(pattern string, handler http.Handler) {
+	server.mux.Handle(pattern, handler)
+}
+
+func (server *Server) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	server.mux.ServeHTTP(writer, request)
+}
