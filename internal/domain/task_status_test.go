@@ -37,7 +37,7 @@ func TestCreateTaskRequestWithInvalidStatus(test *testing.T) {
 		test.Fatal("Expected error, but received nil")
 	}
 
-	expected := `Invalid status: "invalid"`
+	expected := `invalid status: "invalid"`
 
 	if err.Error() != expected {
 		test.Fatalf("Unexected error %q, received: %q", expected, err.Error())
