@@ -11,7 +11,7 @@ import (
 func main() {
 	srv := server.New(":8080")
 
-	srv.RegisterRoutes("GET /health", http.HandleFunc(func(writer http.ResponseWriter, request *http.Request) {
+	srv.RegisterRoutes("GET /health", http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		writer.Header().Set("Content-Type", "application/json")
 		writer.WriteHeader(http.StatusOK)
 		writer.Write([]byte(`{"status": "ok"}`))
