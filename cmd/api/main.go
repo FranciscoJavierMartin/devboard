@@ -18,6 +18,7 @@ func main() {
 
 	srv := server.New(":8080")
 
+	srv.Use(middlewares.Recovery(logger))
 	srv.Use(middlewares.Logger(logger))
 
 	healthHandler := handler.NewHealthHandler()
