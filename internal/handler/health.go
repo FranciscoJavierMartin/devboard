@@ -1,3 +1,4 @@
+// Package handler health
 package handler
 
 import (
@@ -5,19 +6,21 @@ import (
 	"net/http"
 )
 
-type HealthHandler struct {
-}
+// HealthHandler struct
+type HealthHandler struct{}
 
+// NewHealthHandler contructor
 func NewHealthHandler() *HealthHandler {
 	return &HealthHandler{}
 }
 
+// healthResponse struct
 type healthResponse struct {
 	Status  string `json:"status"`
 	Version string `json:"version"`
 }
 
-func (handle *HealthHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+func (handle *HealthHandler) ServeHTTP(writer http.ResponseWriter, _ *http.Request) {
 	resp := healthResponse{
 		Status:  "ok",
 		Version: "1.0.0",

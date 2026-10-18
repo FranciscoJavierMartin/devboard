@@ -1,3 +1,4 @@
+// Package server creates and start server
 package server
 
 import (
@@ -10,14 +11,16 @@ import (
 	"time"
 )
 
+// Server struct
 type Server struct {
 	httpServer *http.Server
 	mux        *http.ServeMux
 	logger     *slog.Logger
 }
 
+// New creates a new server
 func New(addr string, logger *slog.Logger) *Server {
-	mux := http.NewServeMux()
+	mux := http.NewServeMux() // HTTP Router
 
 	httpServer := &http.Server{
 		Addr:    addr,
@@ -36,6 +39,7 @@ func New(addr string, logger *slog.Logger) *Server {
 	}
 }
 
+// Start server
 func (server *Server) Start() error {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
@@ -71,14 +75,17 @@ func (server *Server) Start() error {
 	return nil
 }
 
+// RegisterRoutes method
 func (server *Server) RegisterRoutes(pattern string, handler http.Handler) {
 	server.mux.Handle(pattern, handler)
 }
 
+// ServeHTTP server
 func (server *Server) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	server.mux.ServeHTTP(writer, request)
 }
 
+// Use function for middlewares
 func (server *Server) Use(middleware func(http.Handler) http.Handler) {
 	server.httpServer.Handler = middleware(server.httpServer.Handler)
 }
