@@ -6,13 +6,13 @@ var (
 	// ErrNotFound reusable
 	ErrNotFound = errors.New("resource not found")
 	// ErrAlreadyExists reusable
-	ErrAlreadyExists = errors.New("Resource already exists")
+	ErrAlreadyExists = errors.New("resource already exists")
 	// ErrUnauthorized reusable
 	ErrUnauthorized = errors.New("unauthorized")
 	// ErrForbidden reusable
-	ErrForbidden = errors.New("Forbidden")
+	ErrForbidden = errors.New("forbidden")
 	// ErrInvalidInput reusable
-	ErrInvalidInput = errors.New("Invalid input data")
+	ErrInvalidInput = errors.New("invalid input data")
 	// ErrInternal reusable
 	ErrInternal = errors.New("internal error")
 )

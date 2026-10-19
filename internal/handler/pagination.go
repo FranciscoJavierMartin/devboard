@@ -5,6 +5,7 @@ import (
 	"strconv"
 )
 
+// PaginationParams represents the pagination params used by the app
 type PaginationParams struct {
 	Cursor string
 	Limit  int

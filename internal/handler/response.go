@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/FranciscoJavierMartin/devboard/internal/domain"
+	"github.com/FranciscoJavierMartin/devboard/internal/logger"
 	"github.com/FranciscoJavierMartin/devboard/internal/validator"
 )
 
@@ -15,6 +16,7 @@ type errorResponse struct {
 	Details []validator.ValidationError `json:"details,omitempty"`
 }
 
+// ProblemDetails struct standarized by rfc 7807
 type ProblemDetails struct {
 	Type     string                      `json:"type"`
 	Title    string                      `json:"title"`
@@ -26,7 +28,7 @@ type ProblemDetails struct {
 
 const problemBaseURL = "http://localhost:8080"
 
-// Centralized RespondError
+// RespondError centralize error response
 func RespondError(writer http.ResponseWriter, request *http.Request, logger *slog.Logger, err error) {
 	var problem ProblemDetails
 	problem.Instance = request.URL.Path
@@ -75,12 +77,13 @@ func RespondError(writer http.ResponseWriter, request *http.Request, logger *slo
 
 	if encodeErr := json.NewEncoder(writer).Encode(problem); encodeErr != nil {
 		logger.Error(
-			"error writting problem details",
+			"error writing problem details",
 			slog.String("error", encodeErr.Error()),
 		)
 	}
 }
 
+// RespondValidationError responds validation errors
 func RespondValidationError(writer http.ResponseWriter, errs []validator.ValidationError) {
 	respondJSON(writer, http.StatusBadRequest, errorResponse{
 		Error:   "invalid input data",
@@ -88,6 +91,7 @@ func RespondValidationError(writer http.ResponseWriter, errs []validator.Validat
 	})
 }
 
+// ResponseJSON send a successful response in JSON format
 func ResponseJSON(writer http.ResponseWriter, status int, data any) {
 	respondJSON(writer, status, data)
 }
@@ -95,5 +99,10 @@ func ResponseJSON(writer http.ResponseWriter, status int, data any) {
 func respondJSON(writer http.ResponseWriter, status int, data any) {
 	writer.Header().Set("Content-Type", "application/json")
 	writer.WriteHeader(status)
-	json.NewEncoder(writer).Encode(data)
+	err := json.NewEncoder(writer).Encode(data)
+
+	if err != nil {
+		logger := logger.New(logger.DefaultConfig())
+		logger.Debug("Error creating Scalar page: ", err.Error(), "")
+	}
 }
