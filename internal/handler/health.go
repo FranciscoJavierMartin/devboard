@@ -20,6 +20,14 @@ type healthResponse struct {
 	Version string `json:"version"`
 }
 
+// HealthCheck verify that server is running
+//
+// @Summary	Health check
+// @Description Verify that server is running and accepting requests
+// @Tags  system
+// @Produce json
+// @Success 200 {object} healthResponse
+// @Router /health [get]
 func (handle *HealthHandler) ServeHTTP(writer http.ResponseWriter, _ *http.Request) {
 	resp := healthResponse{
 		Status:  "ok",
