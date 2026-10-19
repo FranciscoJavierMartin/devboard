@@ -56,5 +56,5 @@ docker-logs:
 	docker compose logs -f
 
 ## docs: Generate OpenAPI docs with swaggo
-docs:
+docs-scalar:
 	swag init -g cmd/api/main.go -o docs
