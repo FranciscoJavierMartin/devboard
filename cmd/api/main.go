@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/FranciscoJavierMartin/devboard"
 	"github.com/FranciscoJavierMartin/devboard/internal/handler"
 	"github.com/FranciscoJavierMartin/devboard/internal/logger"
 	"github.com/FranciscoJavierMartin/devboard/internal/middlewares"
@@ -26,6 +27,13 @@ func main() {
 
 	healthHandler := handler.NewHealthHandler()
 
+	docsHandler, err := handler.NewDocsHandler(devboard.SwaggerJSON)
+	if err != nil {
+		logger.Error("Fatal error", "error", err)
+		os.Exit(1)
+	}
+
+	srv.RegisterRoutes("GET /docs", docsHandler)
 	srv.RegisterRoutes("GET /health", healthHandler)
 
 	logger.Info("Server running", slog.String("addr", ":8080"))
