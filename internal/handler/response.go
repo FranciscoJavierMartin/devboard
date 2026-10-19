@@ -15,30 +15,53 @@ type errorResponse struct {
 	Details []validator.ValidationError `json:"details,omitempty"`
 }
 
+type ProblemDetails struct {
+	Type     string                      `json:"type"`
+	Title    string                      `json:"title"`
+	Status   int                         `json:"status"`
+	Detail   string                      `json:"detail"`
+	Instance string                      `json:"instance"`
+	Errors   []validator.ValidationError `json:"errors,omitempty"`
+}
+
+const problemBaseURL = "http://localhost:8080"
+
 // Centralized RespondError
 func RespondError(writer http.ResponseWriter, request *http.Request, logger *slog.Logger, err error) {
-	var status int
-	var message string
+	var problem ProblemDetails
+	problem.Instance = request.URL.Path
 
 	switch {
 	case errors.Is(err, domain.ErrNotFound):
-		status = http.StatusNotFound
-		message = err.Error()
+		problem.Type = problemBaseURL + "/not-found"
+		problem.Title = "Resource not found"
+		problem.Status = http.StatusNotFound
+		problem.Detail = err.Error()
 	case errors.Is(err, domain.ErrAlreadyExists):
-		status = http.StatusConflict
-		message = err.Error()
+		problem.Type = problemBaseURL + "/conflict"
+		problem.Title = "Resource already exists"
+		problem.Status = http.StatusConflict
+		problem.Detail = err.Error()
 	case errors.Is(err, domain.ErrUnauthorized):
-		status = http.StatusUnauthorized
-		message = err.Error()
+		problem.Type = problemBaseURL + "/unauthorized"
+		problem.Title = "Unauthorized"
+		problem.Status = http.StatusUnauthorized
+		problem.Detail = err.Error()
 	case errors.Is(err, domain.ErrForbidden):
-		status = http.StatusForbidden
-		message = err.Error()
+		problem.Type = problemBaseURL + "/forbidden"
+		problem.Title = "Forbidden"
+		problem.Status = http.StatusForbidden
+		problem.Detail = err.Error()
 	case errors.Is(err, domain.ErrInvalidInput):
-		status = http.StatusBadRequest
-		message = err.Error()
+		problem.Type = problemBaseURL + "/bad-request"
+		problem.Title = "Bad request"
+		problem.Status = http.StatusBadRequest
+		problem.Detail = err.Error()
 	default:
-		status = http.StatusInternalServerError
-		message = "internal server error"
+		problem.Type = problemBaseURL + "/internal"
+		problem.Title = "Internal server error"
+		problem.Status = http.StatusInternalServerError
+		problem.Detail = "Something unexpected happened"
 		logger.ErrorContext(
 			request.Context(),
 			"unclassified error",
@@ -47,7 +70,15 @@ func RespondError(writer http.ResponseWriter, request *http.Request, logger *slo
 		)
 	}
 
-	respondJSON(writer, status, errorResponse{Error: message})
+	writer.Header().Set("Content-Type", "application/problem+json")
+	writer.WriteHeader(problem.Status)
+
+	if encodeErr := json.NewEncoder(writer).Encode(problem); encodeErr != nil {
+		logger.Error(
+			"error writting problem details",
+			slog.String("error", encodeErr.Error()),
+		)
+	}
 }
 
 func RespondValidationError(writer http.ResponseWriter, errs []validator.ValidationError) {
