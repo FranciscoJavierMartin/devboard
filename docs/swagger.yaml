@@ -1,0 +1,30 @@
+basePath: /api/v1
+definitions:
+  handler.healthResponse:
+    properties:
+      status:
+        type: string
+      version:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: API REST for project management
+  title: Devboard API
+  version: "1.0"
+paths:
+  /health:
+    get:
+      description: Verify that server is running and accepting requests
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.healthResponse'
+      summary: Health check
+      tags:
+      - system
+swagger: "2.0"
