@@ -2,7 +2,6 @@
 package main
 
 import (
-	"log/slog"
 	"os"
 
 	"github.com/FranciscoJavierMartin/devboard"
@@ -35,8 +34,6 @@ func main() {
 
 	srv.RegisterRoutes("GET /docs", docsHandler)
 	srv.RegisterRoutes("GET /health", healthHandler)
-
-	logger.Info("Server running", slog.String("addr", ":8080"))
 
 	if err := srv.Start(); err != nil {
 		logger.Error("Fatal error", "error", err)
