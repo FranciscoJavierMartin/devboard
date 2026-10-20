@@ -98,6 +98,7 @@ func (server *Server) Use(middleware func(http.Handler) http.Handler) {
 	server.httpServer.Handler = middleware(server.httpServer.Handler)
 }
 
+// UseChain chain middlewares
 func (server *Server) UseChain(middlewaresParams ...middlewares.Middleware) {
 	server.httpServer.Handler = middlewares.Chain(server.httpServer.Handler, middlewaresParams...)
 }

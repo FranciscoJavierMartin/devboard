@@ -10,9 +10,7 @@ import (
 	"github.com/FranciscoJavierMartin/devboard/internal/handler"
 	"github.com/FranciscoJavierMartin/devboard/internal/logger"
 	"github.com/FranciscoJavierMartin/devboard/internal/middlewares"
-	"github.com/FranciscoJavierMartin/devboard/internal/notification"
 	"github.com/FranciscoJavierMartin/devboard/internal/server"
-	"github.com/FranciscoJavierMartin/devboard/internal/validator"
 )
 
 // @title Devboard API
@@ -22,6 +20,7 @@ import (
 // @BasePath /
 func main() {
 	env := os.Getenv("GO_ENV")
+	slog.Info("Loaded environment", "GO_ENV", env)
 
 	var log *slog.Logger
 
@@ -31,9 +30,9 @@ func main() {
 		log = logger.New(logger.DefaultConfig())
 	}
 
-	validate := validator.New()
-	notifier := notification.NewLogNotifier(log)
-	_ = notifier
+	// validate := validator.New()
+	// notifier := notification.NewLogNotifier(log)
+	// _ = notifier
 
 	srv := server.New(
 		":8080",
