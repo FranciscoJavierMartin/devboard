@@ -23,32 +23,38 @@ func defaultConfig() config {
 	}
 }
 
+// Option is a function that update config
 type Option func(*config)
 
+// WithReadTimeout configure read timeout
 func WithReadTimeout(duration time.Duration) Option {
 	return func(c *config) {
 		c.readTimeout = duration
 	}
 }
 
+// WithWriteTimeout configure write timeout
 func WithWriteTimeout(duration time.Duration) Option {
 	return func(c *config) {
 		c.writeTimeout = duration
 	}
 }
 
+// WithIdleTimeout configure idle timeout
 func WithIdleTimeout(duration time.Duration) Option {
 	return func(c *config) {
 		c.idleTimeout = duration
 	}
 }
 
+// WithReadHeaderTimeout configure readHeader timeout
 func WithReadHeaderTimeout(duration time.Duration) Option {
 	return func(c *config) {
 		c.readHeaderTimeout = duration
 	}
 }
 
+// WithLogger configure logger
 func WithLogger(logger *slog.Logger) Option {
 	return func(c *config) {
 		c.logger = logger
