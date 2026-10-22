@@ -15,14 +15,13 @@ import (
 	"github.com/FranciscoJavierMartin/devboard/internal/server"
 	"github.com/FranciscoJavierMartin/devboard/internal/usecases"
 	"github.com/FranciscoJavierMartin/devboard/internal/validator"
-	"github.com/gofiber/fiber/v2/log"
 )
 
 // @title Devboard API
 // @version 1.0
 // @description API REST for project management
 // @host  localhost:8080
-// @BasePath /
+// @BasePath /api/v1
 func main() {
 
 	logger := setupLogger()
@@ -47,12 +46,12 @@ func main() {
 
 	docsHandler, err := handler.NewDocsHandler(devboard.SwaggerJSON)
 	if err != nil {
-		log.Error("Fatal error", "error", err)
+		logger.Error("Fatal error", "error", err)
 		os.Exit(1)
 	}
 
 	srv.RegisterRoutes("GET /docs", docsHandler)
-	srv.RegisterRoutes("GET /health", healthHandler)
+	srv.RegisterRoutes("GET /api/v1/health", healthHandler)
 	srv.RegisterRoutes("POST /api/v1/users", http.HandlerFunc(userHandler.Create))
 	srv.RegisterRoutes("GET /api/v1/users/{id}", http.HandlerFunc(userHandler.Get))
 
@@ -62,7 +61,7 @@ func main() {
 	)
 
 	if err := srv.Start(); err != nil {
-		log.Error("Fatal error", "error", err)
+		logger.Error("Fatal error", "error", err)
 		os.Exit(1)
 	}
 
