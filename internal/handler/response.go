@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"github.com/FranciscoJavierMartin/devboard/internal/domain"
-	"github.com/FranciscoJavierMartin/devboard/internal/logger"
 	"github.com/FranciscoJavierMartin/devboard/internal/validator"
 )
 
@@ -84,25 +83,20 @@ func RespondError(writer http.ResponseWriter, request *http.Request, logger *slo
 }
 
 // RespondValidationError responds validation errors
-func RespondValidationError(writer http.ResponseWriter, errs []validator.ValidationError) {
-	respondJSON(writer, http.StatusBadRequest, errorResponse{
+func RespondValidationError(writer http.ResponseWriter, errs []validator.ValidationError) error {
+	return respondJSON(writer, http.StatusBadRequest, errorResponse{
 		Error:   "invalid input data",
 		Details: errs,
 	})
 }
 
-// ResponseJSON send a successful response in JSON format
-func ResponseJSON(writer http.ResponseWriter, status int, data any) {
-	respondJSON(writer, status, data)
+// RespondJSON send a successful response in JSON format
+func RespondJSON(writer http.ResponseWriter, status int, data any) error {
+	return respondJSON(writer, status, data)
 }
 
-func respondJSON(writer http.ResponseWriter, status int, data any) {
+func respondJSON(writer http.ResponseWriter, status int, data any) error {
 	writer.Header().Set("Content-Type", "application/json")
 	writer.WriteHeader(status)
-	err := json.NewEncoder(writer).Encode(data)
-
-	if err != nil {
-		logger := logger.New(logger.DefaultConfig())
-		logger.Debug("Error creating Scalar page: ", err.Error(), "")
-	}
+	return json.NewEncoder(writer).Encode(data)
 }
