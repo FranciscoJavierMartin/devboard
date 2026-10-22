@@ -3,6 +3,7 @@ package main
 
 import (
 	"log/slog"
+	"net/http"
 	"os"
 	"time"
 
@@ -10,7 +11,10 @@ import (
 	"github.com/FranciscoJavierMartin/devboard/internal/handler"
 	"github.com/FranciscoJavierMartin/devboard/internal/logger"
 	"github.com/FranciscoJavierMartin/devboard/internal/middlewares"
+	"github.com/FranciscoJavierMartin/devboard/internal/repository/memory"
 	"github.com/FranciscoJavierMartin/devboard/internal/server"
+	"github.com/FranciscoJavierMartin/devboard/internal/usecases"
+	"github.com/FranciscoJavierMartin/devboard/internal/validator"
 	"github.com/gofiber/fiber/v2/log"
 )
 
@@ -23,18 +27,23 @@ func main() {
 
 	logger := setupLogger()
 
-	// validate := validator.New()
+	userRepo := memory.NewUserRepository()
+
+	userUC := usecases.NewUserUseCase(userRepo)
+
+	validate := validator.New()
 	// notifier := notification.NewLogNotifier(log)
 	// _ = notifier
 
 	srv := server.New(
 		":8080",
-		server.WithLogger(log),
+		server.WithLogger(logger),
 		server.WithReadTimeout(15*time.Second),
 		server.WithWriteTimeout(30*time.Second),
 	)
 
 	healthHandler := handler.NewHealthHandler()
+	userHandler := handler.NewUserHandler(userUC, validate, logger)
 
 	docsHandler, err := handler.NewDocsHandler(devboard.SwaggerJSON)
 	if err != nil {
@@ -44,6 +53,8 @@ func main() {
 
 	srv.RegisterRoutes("GET /docs", docsHandler)
 	srv.RegisterRoutes("GET /health", healthHandler)
+	srv.RegisterRoutes("POST /api/v1/users", http.HandlerFunc(userHandler.Create))
+	srv.RegisterRoutes("GET /api/v1/users/{id}", http.HandlerFunc(userHandler.Get))
 
 	srv.UseChain(
 		middlewares.Recovery(logger),
