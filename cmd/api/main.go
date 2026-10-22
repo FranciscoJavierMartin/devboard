@@ -11,6 +11,7 @@ import (
 	"github.com/FranciscoJavierMartin/devboard/internal/logger"
 	"github.com/FranciscoJavierMartin/devboard/internal/middlewares"
 	"github.com/FranciscoJavierMartin/devboard/internal/server"
+	"github.com/gofiber/fiber/v2/log"
 )
 
 // @title Devboard API
@@ -19,16 +20,8 @@ import (
 // @host  localhost:8080
 // @BasePath /
 func main() {
-	env := os.Getenv("GO_ENV")
-	slog.Info("Loaded environment", "GO_ENV", env)
 
-	var log *slog.Logger
-
-	if env == "production" {
-		log = logger.New(logger.ProductionConfig())
-	} else {
-		log = logger.New(logger.DefaultConfig())
-	}
+	logger := setupLogger()
 
 	// validate := validator.New()
 	// notifier := notification.NewLogNotifier(log)
@@ -53,8 +46,8 @@ func main() {
 	srv.RegisterRoutes("GET /health", healthHandler)
 
 	srv.UseChain(
-		middlewares.Recovery(log),
-		middlewares.Logger(log),
+		middlewares.Recovery(logger),
+		middlewares.Logger(logger),
 	)
 
 	if err := srv.Start(); err != nil {
@@ -62,4 +55,19 @@ func main() {
 		os.Exit(1)
 	}
 
+}
+
+func setupLogger() *slog.Logger {
+	env := os.Getenv("GO_ENV")
+	slog.Info("Loaded environment", "GO_ENV", env)
+
+	var log *slog.Logger
+
+	if env == "production" {
+		log = logger.New(logger.ProductionConfig())
+	} else {
+		log = logger.New(logger.DefaultConfig())
+	}
+
+	return log
 }
