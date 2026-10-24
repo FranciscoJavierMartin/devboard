@@ -4,7 +4,7 @@ MAIN_PATH=./cmd/api
 MIGRATE_PATH=./migrations
 DB_URL=postgresql://postgres:password@localhost:5432/devboard?sslmode=disable
 
-.PHONY: run build test lint migrate-up migrate-down generate tidy help
+.PHONY: run build test lint migrate-up migrate-down generate tidy help docs
 
 ## run: Run app
 run:
@@ -56,5 +56,5 @@ docker-logs:
 	docker compose logs -f
 
 ## docs: Generate OpenAPI docs with swaggo
-docs-scalar:
+docs:
 	swag init -g cmd/api/main.go -o docs
