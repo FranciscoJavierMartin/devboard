@@ -1,0 +1,23 @@
+meta {
+  name: Assign task to user
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseURL}}/tasks/{{taskId}}/assign
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "assignee_id": "{{userId}}"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+  forwardAuthorizationHeader: false
+}

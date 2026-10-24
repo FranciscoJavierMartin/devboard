@@ -38,6 +38,13 @@ definitions:
       type:
         type: string
     type: object
+  handler.assignTaskRequest:
+    properties:
+      assignee_id:
+        type: string
+    required:
+    - assignee_id
+    type: object
   handler.createTaskRequest:
     properties:
       project_id:
@@ -200,6 +207,37 @@ paths:
           schema:
             $ref: '#/definitions/handler.ProblemDetails'
       summary: Retrieve task by ID
+      tags:
+      - tasks
+  /tasks/{id}/assign:
+    put:
+      consumes:
+      - application/json
+      description: Assign task to a team member
+      parameters:
+      - description: Task ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User ID
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.assignTaskRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.taskResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ProblemDetails'
+      summary: Assign task
       tags:
       - tasks
   /users:
