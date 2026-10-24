@@ -1,0 +1,16 @@
+meta {
+  name: Get task by Id
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseURL}}/tasks/{{taskId}}
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  forwardAuthorizationHeader: false
+}

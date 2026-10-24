@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/FranciscoJavierMartin/devboard/internal/domain"
 	"github.com/FranciscoJavierMartin/devboard/internal/usecases"
@@ -29,9 +30,31 @@ type createTaskRequest struct {
 	Title     string `json:"title" validate:"required,min=3,max=200"`
 }
 
-type createTaskResponse struct {
-	ProjectID string `json:"project_id"`
-	Title     string `json:"title"`
+type taskResponse struct {
+	ID          string            `json:"id"`
+	ProjectID   string            `json:"project_id"`
+	Title       string            `json:"title"`
+	Description string            `json:"description,omitempty"`
+	Status      domain.TaskStatus `json:"status"`
+	AssigneeID  *string           `json:"assignee_id,omitempty"`
+	CreatedBy   string            `json:"created_by"`
+	CreatedAt   time.Time         `json:"created_at"`
+	UpdatedAt   time.Time         `json:"updated_at"`
+}
+
+// toTaskResponse transform entity to response DTO
+func toTaskResponse(t *domain.Task) taskResponse {
+	return taskResponse{
+		ID:          t.ID,
+		ProjectID:   t.ProjectID,
+		Title:       t.Title,
+		Description: t.Description,
+		Status:      t.Status,
+		AssigneeID:  t.AssigneeID,
+		CreatedBy:   t.CreatedBy,
+		CreatedAt:   t.CreatedAt,
+		UpdatedAt:   t.UpdatedAt,
+	}
 }
 
 // Create method to create tasks
@@ -42,7 +65,7 @@ type createTaskResponse struct {
 // @Accept json
 // @Produce json
 // @Param request body	createTaskRequest	true "Task data"
-// @Success 201 {object} createTaskResponse
+// @Success 201 {object} taskResponse
 // @Failure 400 {object} ProblemDetails
 // @Router /tasks [post]
 func (h *TaskHandler) Create(w http.ResponseWriter, r *http.Request) {
@@ -72,10 +95,7 @@ func (h *TaskHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := respondJSON(w, http.StatusCreated, createTaskResponse{
-		ProjectID: task.ProjectID,
-		Title:     task.Title,
-	}); err != nil {
+	if err := RespondJSON(w, http.StatusCreated, toTaskResponse(task)); err != nil {
 		h.logger.ErrorContext(
 			r.Context(),
 			"error writing JSON response",
@@ -85,3 +105,40 @@ func (h *TaskHandler) Create(w http.ResponseWriter, r *http.Request) {
 		)
 	}
 }
+
+// Get method to retrieve task by ID
+//
+// @Summary Retrieve task by ID
+// @Description Retrieve a task by its ID
+// @Tags  tasks
+// @Produce json
+// @Param id path	string	true "task ID"
+// @Success 200 {object} taskResponse
+// @Failure 404 {object} ProblemDetails
+// @Router /tasks/{id} [get]
+func (h *TaskHandler) Get(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+
+	task, err := h.usercase.GetTask(r.Context(), id)
+
+	if err != nil {
+		RespondError(w, r, h.logger, err)
+		return
+	}
+
+	if err := RespondJSON(w, http.StatusOK, toTaskResponse(task)); err != nil {
+		h.logger.ErrorContext(
+			r.Context(),
+			"error writing JSON response",
+			"error", err,
+			"method", r.Method,
+			"path", r.URL.Path,
+		)
+	}
+}
+
+// ListByProject
+
+// Assign
+
+// UpdateStatus

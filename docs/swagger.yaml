@@ -1,5 +1,15 @@
 basePath: /api/v1
 definitions:
+  domain.TaskStatus:
+    enum:
+    - todo
+    - in_progress
+    - done
+    type: string
+    x-enum-varnames:
+    - TaskStatusTodo
+    - TaskStatusInProgress
+    - TaskStatusDone
   handler.ProblemDetails:
     properties:
       detail:
@@ -29,13 +39,6 @@ definitions:
     - project_id
     - title
     type: object
-  handler.createTaskResponse:
-    properties:
-      project_id:
-        type: string
-      title:
-        type: string
-    type: object
   handler.createUserRequest:
     properties:
       email:
@@ -57,6 +60,27 @@ definitions:
       status:
         type: string
       version:
+        type: string
+    type: object
+  handler.taskResponse:
+    properties:
+      assignee_id:
+        type: string
+      created_at:
+        type: string
+      created_by:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      project_id:
+        type: string
+      status:
+        $ref: '#/definitions/domain.TaskStatus'
+      title:
+        type: string
+      updated_at:
         type: string
     type: object
   handler.userResponse:
@@ -113,12 +137,35 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/handler.createTaskResponse'
+            $ref: '#/definitions/handler.taskResponse'
         "400":
           description: Bad Request
           schema:
             $ref: '#/definitions/handler.ProblemDetails'
       summary: Create task
+      tags:
+      - tasks
+  /tasks/{id}:
+    get:
+      description: Retrieve a task by its ID
+      parameters:
+      - description: task ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.taskResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ProblemDetails'
+      summary: Retrieve task by ID
       tags:
       - tasks
   /users:

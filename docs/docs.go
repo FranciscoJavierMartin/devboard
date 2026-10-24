@@ -63,11 +63,46 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/handler.createTaskResponse"
+                            "$ref": "#/definitions/handler.taskResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handler.ProblemDetails"
+                        }
+                    }
+                }
+            }
+        },
+        "/tasks/{id}": {
+            "get": {
+                "description": "Retrieve a task by its ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tasks"
+                ],
+                "summary": "Retrieve task by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "task ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.taskResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/handler.ProblemDetails"
                         }
@@ -152,6 +187,19 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "domain.TaskStatus": {
+            "type": "string",
+            "enum": [
+                "todo",
+                "in_progress",
+                "done"
+            ],
+            "x-enum-varnames": [
+                "TaskStatusTodo",
+                "TaskStatusInProgress",
+                "TaskStatusDone"
+            ]
+        },
         "handler.ProblemDetails": {
             "type": "object",
             "properties": {
@@ -195,17 +243,6 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.createTaskResponse": {
-            "type": "object",
-            "properties": {
-                "project_id": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                }
-            }
-        },
         "handler.createUserRequest": {
             "type": "object",
             "required": [
@@ -235,6 +272,38 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "version": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.taskResponse": {
+            "type": "object",
+            "properties": {
+                "assignee_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "project_id": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/domain.TaskStatus"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }
