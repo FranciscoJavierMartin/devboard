@@ -35,6 +35,41 @@ const docTemplate = `{
                 }
             }
         },
+        "/projects/{id}/tasks": {
+            "get": {
+                "description": "Returns all tasks that belongs to a project",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tasks"
+                ],
+                "summary": "List all tasks from a project",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Project ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.PaginatedResponse-handler_taskResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/handler.ProblemDetails"
+                        }
+                    }
+                }
+            }
+        },
         "/tasks": {
             "post": {
                 "description": "Create a new task",
@@ -199,6 +234,23 @@ const docTemplate = `{
                 "TaskStatusInProgress",
                 "TaskStatusDone"
             ]
+        },
+        "handler.PaginatedResponse-handler_taskResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handler.taskResponse"
+                    }
+                },
+                "hasMore": {
+                    "type": "boolean"
+                },
+                "nextCursor": {
+                    "type": "string"
+                }
+            }
         },
         "handler.ProblemDetails": {
             "type": "object",
