@@ -29,6 +29,22 @@ type createTaskRequest struct {
 	Title     string `json:"title" validate:"required,min=3,max=200"`
 }
 
+type createTaskResponse struct {
+	ProjectID string `json:"project_id"`
+	Title     string `json:"title"`
+}
+
+// Create method to create tasks
+//
+// @Summary	Create task
+// @Description Create a new task
+// @Tags  tasks
+// @Accept json
+// @Produce json
+// @Param request body	createTaskRequest	true "Task data"
+// @Success 201 {object} createTaskResponse
+// @Failure 400 {object} ProblemDetails
+// @Router /tasks [post]
 func (h *TaskHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var req createTaskRequest
 
@@ -56,7 +72,10 @@ func (h *TaskHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := respondJSON(w, http.StatusCreated, task); err != nil {
+	if err := respondJSON(w, http.StatusCreated, createTaskResponse{
+		ProjectID: task.ProjectID,
+		Title:     task.Title,
+	}); err != nil {
 		h.logger.ErrorContext(
 			r.Context(),
 			"error writing JSON response",

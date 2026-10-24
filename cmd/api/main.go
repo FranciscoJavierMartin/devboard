@@ -27,8 +27,10 @@ func main() {
 	logger := setupLogger()
 
 	userRepo := memory.NewUserRepository()
+	taskRepo := memory.NewTaskRepository()
 
 	userUC := usecases.NewUserUseCase(userRepo)
+	taskUC := usecases.NewTaskUseCase(taskRepo, taskRepo)
 
 	validate := validator.New()
 	// notifier := notification.NewLogNotifier(log)
@@ -43,6 +45,7 @@ func main() {
 
 	healthHandler := handler.NewHealthHandler()
 	userHandler := handler.NewUserHandler(userUC, validate, logger)
+	taskHandler := handler.NewTaskHandler(taskUC, validate, logger)
 
 	docsHandler, err := handler.NewDocsHandler(devboard.SwaggerJSON)
 	if err != nil {
@@ -52,8 +55,11 @@ func main() {
 
 	srv.RegisterRoutes("GET /docs", docsHandler)
 	srv.RegisterRoutes("GET /api/v1/health", healthHandler)
+	// User routes
 	srv.RegisterRoutes("POST /api/v1/users", http.HandlerFunc(userHandler.Create))
 	srv.RegisterRoutes("GET /api/v1/users/{id}", http.HandlerFunc(userHandler.Get))
+	// Task routes
+	srv.RegisterRoutes("POST /api/v1/tasks", http.HandlerFunc(taskHandler.Create))
 
 	srv.UseChain(
 		middlewares.Recovery(logger),
