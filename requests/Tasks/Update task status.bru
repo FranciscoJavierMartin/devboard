@@ -1,0 +1,23 @@
+meta {
+  name: Update task status
+  type: http
+  seq: 5
+}
+
+put {
+  url: {{baseURL}}/tasks/{{taskId}}/status
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "status": "in_progress"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+  forwardAuthorizationHeader: false
+}

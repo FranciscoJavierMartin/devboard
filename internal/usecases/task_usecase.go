@@ -70,3 +70,21 @@ func (uc *TaskUserCase) GetTask(ctx context.Context, id string) (*domain.Task, e
 
 	return task, nil
 }
+
+func (uc *TaskUserCase) UpdateTaskStatus(ctx context.Context, taskID string, newStatus domain.TaskStatus) (*domain.Task, error) {
+	task, err := uc.queries.GetByID(ctx, taskID)
+
+	if err != nil {
+		return nil, fmt.Errorf("retrieving task %s: %w", taskID, err)
+	}
+
+	if err := task.MoveToStatus(newStatus); err != nil {
+		return nil, err
+	}
+
+	if err := uc.commands.Update(ctx, task); err != nil {
+		return nil, fmt.Errorf("updating status from task %s: %w", taskID, err)
+	}
+
+	return task, nil
+}
