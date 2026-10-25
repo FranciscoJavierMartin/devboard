@@ -12,19 +12,19 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type TaskRespository struct {
+type TaskRepository struct {
 	pool    *pgxpool.Pool
 	queries *generated.Queries
 }
 
-func NewTaskRepository(pool *pgxpool.Pool) *TaskRespository {
-	return &TaskRespository{
+func NewTaskRepository(pool *pgxpool.Pool) *TaskRepository {
+	return &TaskRepository{
 		pool:    pool,
 		queries: generated.New(pool),
 	}
 }
 
-func (r *TaskRespository) Create(ctx context.Context, task *domain.Task) error {
+func (r *TaskRepository) Create(ctx context.Context, task *domain.Task) error {
 	var projetID pgtype.UUID
 	if err := projetID.Scan(task.ProjectID); err != nil {
 		return fmt.Errorf("invalid project_id: %w", domain.ErrInvalidInput)
@@ -54,7 +54,7 @@ func (r *TaskRespository) Create(ctx context.Context, task *domain.Task) error {
 	return nil
 }
 
-func (r *TaskRespository) Update(ctx context.Context, task *domain.Task) error {
+func (r *TaskRepository) Update(ctx context.Context, task *domain.Task) error {
 	var id pgtype.UUID
 	if err := id.Scan(task.ID); err != nil {
 		return fmt.Errorf("invalid id: %w", domain.ErrInvalidInput)
@@ -86,7 +86,7 @@ func (r *TaskRespository) Update(ctx context.Context, task *domain.Task) error {
 	return nil
 }
 
-func (r *TaskRespository) GetByID(ctx context.Context, id string) (*domain.Task, error) {
+func (r *TaskRepository) GetByID(ctx context.Context, id string) (*domain.Task, error) {
 	var taskID pgtype.UUID
 
 	if err := taskID.Scan(id); err != nil {
@@ -103,6 +103,27 @@ func (r *TaskRespository) GetByID(ctx context.Context, id string) (*domain.Task,
 	}
 
 	return toDomainTask(task), nil
+}
+
+func (r *TaskRepository) ListByProject(ctx context.Context, projectID string) ([]*domain.Task, error) {
+	var pgProjectID pgtype.UUID
+
+	if err := pgProjectID.Scan(projectID); err != nil {
+		return nil, fmt.Errorf("invalid id: %w", domain.ErrInvalidInput)
+	}
+
+	tasks, err := r.queries.ListTasksByProject(ctx, pgProjectID)
+
+	if err != nil {
+		return nil, fmt.Errorf("retrieving tasks from project %s: %w", pgProjectID, err)
+	}
+
+	tasksResponse := make([]*domain.Task, len(tasks))
+	for i, task := range tasks {
+		tasksResponse[i] = toDomainTask(task)
+	}
+
+	return tasksResponse, nil
 }
 
 func toDomainTask(t generated.Task) *domain.Task {
