@@ -29,8 +29,8 @@ func NewTaskUseCase(commands TaskCommandRepository, queries TaskQueryRepository)
 	}
 }
 
-func (uc *TaskUserCase) CreateTask(ctx context.Context, projectID, title, createdBy string) (*domain.Task, error) {
-	task := domain.NewTask(projectID, title, createdBy)
+func (uc *TaskUserCase) CreateTask(ctx context.Context, projectID, title, description, createdBy string) (*domain.Task, error) {
+	task := domain.NewTask(projectID, title, description, createdBy)
 
 	if err := uc.commands.Create(ctx, task); err != nil {
 		return nil, fmt.Errorf("creating task: %w", err)

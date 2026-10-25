@@ -26,8 +26,9 @@ func NewTaskHandler(uc *usecases.TaskUserCase, v *validator.Validator, logger *s
 }
 
 type createTaskRequest struct {
-	ProjectID string `json:"project_id" validate:"required"`
-	Title     string `json:"title" validate:"required,min=3,max=200"`
+	ProjectID   string `json:"project_id" validate:"required"`
+	Title       string `json:"title" validate:"required,min=3,max=200"`
+	Description string `json:"description" validate:"max=2000"`
 }
 
 type assignTaskRequest struct {
@@ -97,7 +98,7 @@ func (h *TaskHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	task, err := h.usercase.CreateTask(r.Context(), req.ProjectID, req.Title, "system")
+	task, err := h.usercase.CreateTask(r.Context(), req.ProjectID, req.Title, req.Description, "system")
 	if err != nil {
 		RespondError(w, r, h.logger, err)
 		return

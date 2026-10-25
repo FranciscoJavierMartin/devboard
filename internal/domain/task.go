@@ -18,7 +18,7 @@ type Task struct {
 	UpdatedAt   time.Time
 }
 
-func NewTask(projectID, title, createdBy string) *Task {
+func NewTask(projectID, title, description, createdBy string) *Task {
 	now := time.Now()
 
 	return &Task{
@@ -26,7 +26,7 @@ func NewTask(projectID, title, createdBy string) *Task {
 		Title:       title,
 		CreatedBy:   createdBy,
 		Status:      TaskStatusTodo,
-		Description: "",
+		Description: description,
 		CreatedAt:   now,
 		UpdatedAt:   now,
 	}
