@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/FranciscoJavierMartin/devboard"
+	"github.com/FranciscoJavierMartin/devboard/internal/cache"
 	"github.com/FranciscoJavierMartin/devboard/internal/handler"
 	"github.com/FranciscoJavierMartin/devboard/internal/logger"
 	"github.com/FranciscoJavierMartin/devboard/internal/middlewares"
@@ -28,6 +29,8 @@ func main() {
 	logger := setupLogger()
 
 	dbURL := os.Getenv("DATABASE_URL")
+	redisAddr := os.Getenv("REDIS_ADDR")
+
 	pool, err := pgrepo.NewPool(context.Background(), pgrepo.Config{
 		URL:             dbURL,
 		MaxConns:        12,
@@ -44,6 +47,25 @@ func main() {
 	defer pool.Close()
 
 	logger.Info("Connection to database")
+
+	redisClient, err := cache.NewClient(context.Background(), cache.Config{
+		Addr:    redisAddr,
+		Timeout: 5 * time.Second,
+	})
+
+	if err != nil {
+		logger.Error("Could not connect to Redis instance", slog.Any("error", err))
+		os.Exit(1)
+	}
+
+	defer func() {
+		if err := redisClient.Close(); err != nil {
+			logger.Error(
+				"Could not close connection to Redis instance",
+				slog.Any("error", err),
+			)
+		}
+	}()
 
 	// Memory
 	// userRepo := memory.NewUserRepository()
