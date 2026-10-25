@@ -2,12 +2,15 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"fmt"
+
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/FranciscoJavierMartin/devboard/internal/domain"
 	generated "github.com/FranciscoJavierMartin/devboard/internal/repository/postgres/generated"
-
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type UserRespository struct {
@@ -38,4 +41,34 @@ func (r *UserRespository) Create(ctx context.Context, user *domain.User) error {
 	user.UpdatedAt = result.UpdatedAt.Time
 
 	return nil
+}
+
+func (r *UserRespository) GetByID(ctx context.Context, id string) (*domain.User, error) {
+	var pgID pgtype.UUID
+
+	if err := pgID.Scan(id); err != nil {
+		return nil, fmt.Errorf("invalid id %s: %w", id, domain.ErrNotFound)
+	}
+
+	result, err := r.queries.GetUserByID(ctx, pgID)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, fmt.Errorf("user %s: %w", id, domain.ErrNotFound)
+		}
+		return nil, fmt.Errorf("retrieving user %s: %w", id, domain.ErrInternal)
+	}
+
+	return toDomainUser(result), nil
+}
+
+func toDomainUser(u generated.User) *domain.User {
+	return &domain.User{
+		ID:           u.ID.String(),
+		Email:        u.Email,
+		PasswordHash: u.PasswordHash,
+		Name:         u.Name,
+		CreatedAt:    u.CreatedAt.Time,
+		UpdatedAt:    u.UpdatedAt.Time,
+	}
 }
