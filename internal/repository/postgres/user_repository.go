@@ -13,19 +13,19 @@ import (
 	generated "github.com/FranciscoJavierMartin/devboard/internal/repository/postgres/generated"
 )
 
-type UserRespository struct {
+type UserRepository struct {
 	pool    *pgxpool.Pool
 	queries *generated.Queries
 }
 
-func NewUserRespository(pool *pgxpool.Pool) *UserRespository {
-	return &UserRespository{
+func NewUserRepository(pool *pgxpool.Pool) *UserRepository {
+	return &UserRepository{
 		pool:    pool,
 		queries: generated.New(pool),
 	}
 }
 
-func (r *UserRespository) Create(ctx context.Context, user *domain.User) error {
+func (r *UserRepository) Create(ctx context.Context, user *domain.User) error {
 	result, err := r.queries.CreateUser(ctx, generated.CreateUserParams{
 		Email:        user.Email,
 		PasswordHash: user.PasswordHash,
@@ -43,7 +43,7 @@ func (r *UserRespository) Create(ctx context.Context, user *domain.User) error {
 	return nil
 }
 
-func (r *UserRespository) GetByID(ctx context.Context, id string) (*domain.User, error) {
+func (r *UserRepository) GetByID(ctx context.Context, id string) (*domain.User, error) {
 	var pgID pgtype.UUID
 
 	if err := pgID.Scan(id); err != nil {
@@ -62,7 +62,7 @@ func (r *UserRespository) GetByID(ctx context.Context, id string) (*domain.User,
 	return toDomainUser(user), nil
 }
 
-func (r *UserRespository) GetByEmail(ctx context.Context, email string) (*domain.User, error) {
+func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*domain.User, error) {
 	user, err := r.queries.GetUserByEmail(ctx, email)
 
 	if err != nil {

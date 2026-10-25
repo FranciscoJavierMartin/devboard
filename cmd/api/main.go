@@ -2,6 +2,7 @@
 package main
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
 	"os"
@@ -11,7 +12,7 @@ import (
 	"github.com/FranciscoJavierMartin/devboard/internal/handler"
 	"github.com/FranciscoJavierMartin/devboard/internal/logger"
 	"github.com/FranciscoJavierMartin/devboard/internal/middlewares"
-	"github.com/FranciscoJavierMartin/devboard/internal/repository/memory"
+	pgrepo "github.com/FranciscoJavierMartin/devboard/internal/repository/postgres"
 	"github.com/FranciscoJavierMartin/devboard/internal/server"
 	"github.com/FranciscoJavierMartin/devboard/internal/usecases"
 	"github.com/FranciscoJavierMartin/devboard/internal/validator"
@@ -26,8 +27,30 @@ func main() {
 
 	logger := setupLogger()
 
-	userRepo := memory.NewUserRepository()
-	taskRepo := memory.NewTaskRepository()
+	dbURL := os.Getenv("DATABASE_URL")
+	pool, err := pgrepo.NewPool(context.Background(), pgrepo.Config{
+		URL:             dbURL,
+		MaxConns:        12,
+		MinConns:        5,
+		MaxConnLifeTime: 1 * time.Hour,
+		MaxConnIdleTime: 30 * time.Minute,
+	})
+
+	if err != nil {
+		logger.Error("Could not connect to database", slog.Any("error", err))
+		os.Exit(1)
+	}
+
+	defer pool.Close()
+
+	logger.Info("Connection to database")
+
+	// Memory
+	// userRepo := memory.NewUserRepository()
+	// taskRepo := memory.NewTaskRepository()
+
+	userRepo := pgrepo.NewUserRepository(pool)
+	taskRepo := pgrepo.NewTaskRepository(pool)
 
 	userUC := usecases.NewUserUseCase(userRepo)
 	taskUC := usecases.NewTaskUseCase(taskRepo, taskRepo)
