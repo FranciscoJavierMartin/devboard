@@ -40,7 +40,13 @@ func (uc *TaskUserCase) CreateTask(ctx context.Context, projectID, title, create
 }
 
 func (uc *TaskUserCase) ListProjectTasks(ctx context.Context, projectID string) ([]*domain.Task, error) {
-	return uc.queries.ListByProject(ctx, projectID)
+	tasks, err := uc.queries.ListByProject(ctx, projectID)
+
+	if err != nil {
+		return nil, fmt.Errorf("Retrieving tasks from project %s: %w", projectID, err)
+	}
+
+	return tasks, nil
 }
 
 func (uc *TaskUserCase) AssignTask(ctx context.Context, taskID, userID string) (*domain.Task, error) {
