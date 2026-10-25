@@ -8,7 +8,7 @@ package postgres
 import (
 	"context"
 
-	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createTask = `-- name: CreateTask :one
@@ -29,15 +29,15 @@ RETURNING id, project_id, title, description, status, assignee_id, created_by, c
 `
 
 type CreateTaskParams struct {
-	ProjectID   uuid.UUID `json:"project_id"`
-	Title       string    `json:"title"`
-	Description string    `json:"description"`
-	Status      string    `json:"status"`
-	CreatedBy   uuid.UUID `json:"created_by"`
+	ProjectID   pgtype.UUID `json:"project_id"`
+	Title       string      `json:"title"`
+	Description string      `json:"description"`
+	Status      string      `json:"status"`
+	CreatedBy   pgtype.UUID `json:"created_by"`
 }
 
 func (q *Queries) CreateTask(ctx context.Context, arg CreateTaskParams) (Task, error) {
-	row := q.db.QueryRowContext(ctx, createTask,
+	row := q.db.QueryRow(ctx, createTask,
 		arg.ProjectID,
 		arg.Title,
 		arg.Description,
@@ -63,8 +63,8 @@ const getTaskByID = `-- name: GetTaskByID :one
 SELECT id, project_id, title, description, status, assignee_id, created_by, created_at, updated_at FROM tasks WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetTaskByID(ctx context.Context, id uuid.UUID) (Task, error) {
-	row := q.db.QueryRowContext(ctx, getTaskByID, id)
+func (q *Queries) GetTaskByID(ctx context.Context, id pgtype.UUID) (Task, error) {
+	row := q.db.QueryRow(ctx, getTaskByID, id)
 	var i Task
 	err := row.Scan(
 		&i.ID,
@@ -84,8 +84,8 @@ const listTasksByProject = `-- name: ListTasksByProject :many
 SELECT id, project_id, title, description, status, assignee_id, created_by, created_at, updated_at FROM tasks where project_id = $1
 `
 
-func (q *Queries) ListTasksByProject(ctx context.Context, projectID uuid.UUID) ([]Task, error) {
-	rows, err := q.db.QueryContext(ctx, listTasksByProject, projectID)
+func (q *Queries) ListTasksByProject(ctx context.Context, projectID pgtype.UUID) ([]Task, error) {
+	rows, err := q.db.Query(ctx, listTasksByProject, projectID)
 	if err != nil {
 		return nil, err
 	}
@@ -108,9 +108,6 @@ func (q *Queries) ListTasksByProject(ctx context.Context, projectID uuid.UUID) (
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -130,15 +127,15 @@ RETURNING id, project_id, title, description, status, assignee_id, created_by, c
 `
 
 type UpdateTaskParams struct {
-	ID          uuid.UUID     `json:"id"`
-	Title       string        `json:"title"`
-	Description string        `json:"description"`
-	Status      string        `json:"status"`
-	AssigneeID  uuid.NullUUID `json:"assignee_id"`
+	ID          pgtype.UUID `json:"id"`
+	Title       string      `json:"title"`
+	Description string      `json:"description"`
+	Status      string      `json:"status"`
+	AssigneeID  pgtype.UUID `json:"assignee_id"`
 }
 
 func (q *Queries) UpdateTask(ctx context.Context, arg UpdateTaskParams) (Task, error) {
-	row := q.db.QueryRowContext(ctx, updateTask,
+	row := q.db.QueryRow(ctx, updateTask,
 		arg.ID,
 		arg.Title,
 		arg.Description,
