@@ -4,7 +4,7 @@ MAIN_PATH=./cmd/api
 MIGRATE_PATH=./migrations
 DB_URL=postgresql://postgres:password@localhost:5432/devboard?sslmode=disable
 
-.PHONY: run build test lint migrate-up migrate-down generate tidy help docs
+.PHONY: run build test lint migrate-create migrate-up migrate-down generate tidy help docs
 
 ## run: Run app
 run:
@@ -22,6 +22,10 @@ test:
 lint:
 	golangci-lint run ./...
 
+## migrate-create: Create a new migration. Example use: make migrate-create name=create_users
+migrate-create:
+	migrate create -ext sql -dir $(MIGRATE_PATH) -seq $(name)
+
 ## migrate-up: Apply all pending migrations
 migrate-up:
 	migrate -path $(MIGRATE_PATH) -database "$(DB_URL)" up
@@ -32,6 +36,7 @@ migrate-down:
 
 ## generate: Run go generate in the entire project
 generate:
+	sqlc generate
 	go generate ./...
 
 ## tidy: Clean and verify dependencies
