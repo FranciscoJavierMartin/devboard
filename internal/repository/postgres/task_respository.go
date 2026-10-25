@@ -63,7 +63,6 @@ func (r *TaskRespository) Update(ctx context.Context, task *domain.Task) error {
 	var assigneeID pgtype.UUID
 
 	if task.AssigneeID != nil {
-
 		if err := assigneeID.Scan(task.AssigneeID); err != nil {
 			return fmt.Errorf("invalid assigned_id: %w", domain.ErrInvalidInput)
 		}
@@ -85,6 +84,25 @@ func (r *TaskRespository) Update(ctx context.Context, task *domain.Task) error {
 	}
 
 	return nil
+}
+
+func (r *TaskRespository) GetByID(ctx context.Context, id string) (*domain.Task, error) {
+	var taskID pgtype.UUID
+
+	if err := taskID.Scan(id); err != nil {
+		return nil, fmt.Errorf("invalid id: %w", domain.ErrInvalidInput)
+	}
+
+	task, err := r.queries.GetTaskByID(ctx, taskID)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, fmt.Errorf("task %s: %w", id, domain.ErrNotFound)
+		}
+		return nil, fmt.Errorf("retrieving task: %s: %w", id, err)
+	}
+
+	return toDomainTask(task), nil
 }
 
 func toDomainTask(t generated.Task) *domain.Task {
