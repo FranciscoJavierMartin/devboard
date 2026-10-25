@@ -2,6 +2,7 @@ package usecases
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/FranciscoJavierMartin/devboard/internal/auth"
@@ -39,4 +40,61 @@ func NewAuthUseCase(
 		tokenStore:           tokenStore,
 		refreshTokenDuration: refreshTokenDuration,
 	}
+}
+
+func (uc *AuthUseCase) Register(ctx context.Context, email, name, password string) (*AuthToken, error) {
+	passwordHash, err := auth.HashPassword(password)
+
+	if err != nil {
+		return nil, fmt.Errorf("hashing password: %w", err)
+	}
+
+	user := domain.NewUser(email, name, passwordHash)
+
+	if err := uc.userRepo.Create(ctx, user); err != nil {
+		return nil, fmt.Errorf("creating user: %w", err)
+	}
+
+	tokens, err := uc.generateTokenPair(ctx, user.ID, user.Email, "member")
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tokens, nil
+}
+
+func (uc *AuthUseCase) generateTokenPair(ctx context.Context, userID, email, role string) (*AuthToken, error) {
+	accessToken, err := uc.jwtManager.GenerateAccessToken(userID, email, role)
+
+	if err != nil {
+		return nil, fmt.Errorf("generating access token: %w", err)
+	}
+
+	refreshToken, err := uc.jwtManager.GenerateRefreshToken(userID, email, role)
+
+	if err != nil {
+		return nil, fmt.Errorf("generating refresh token: %w", err)
+	}
+
+	refreshClaims, err := uc.jwtManager.VerifyToken(refreshToken)
+
+	if err != nil {
+		return nil, fmt.Errorf("extracting claims from refresh token: %w", err)
+	}
+
+	if err := uc.tokenStore.StoreRefreshToken(
+		ctx,
+		refreshClaims.ID,
+		userID,
+		uc.refreshTokenDuration,
+	); err != nil {
+		return nil, fmt.Errorf("saving refresh token: %w", err)
+	}
+
+	return &AuthToken{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+		ExpiresIn:    15 * time.Minute,
+	}, nil
 }
