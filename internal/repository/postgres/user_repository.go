@@ -50,7 +50,7 @@ func (r *UserRespository) GetByID(ctx context.Context, id string) (*domain.User,
 		return nil, fmt.Errorf("invalid id %s: %w", id, domain.ErrNotFound)
 	}
 
-	result, err := r.queries.GetUserByID(ctx, pgID)
+	user, err := r.queries.GetUserByID(ctx, pgID)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -59,7 +59,20 @@ func (r *UserRespository) GetByID(ctx context.Context, id string) (*domain.User,
 		return nil, fmt.Errorf("retrieving user %s: %w", id, domain.ErrInternal)
 	}
 
-	return toDomainUser(result), nil
+	return toDomainUser(user), nil
+}
+
+func (r *UserRespository) GetByEmail(ctx context.Context, email string) (*domain.User, error) {
+	user, err := r.queries.GetUserByEmail(ctx, email)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, fmt.Errorf("user %s: %w", email, domain.ErrNotFound)
+		}
+		return nil, fmt.Errorf("retrieving user %s: %w", email, domain.ErrInternal)
+	}
+
+	return toDomainUser(user), nil
 }
 
 func toDomainUser(u generated.User) *domain.User {
