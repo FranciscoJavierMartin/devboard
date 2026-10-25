@@ -2,10 +2,12 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/FranciscoJavierMartin/devboard/internal/domain"
 	generated "github.com/FranciscoJavierMartin/devboard/internal/repository/postgres/generated"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -50,4 +52,57 @@ func (r *TaskRespository) Create(ctx context.Context, task *domain.Task) error {
 	task.UpdatedAt = result.UpdatedAt.Time
 
 	return nil
+}
+
+func (r *TaskRespository) Update(ctx context.Context, task *domain.Task) error {
+	var id pgtype.UUID
+	if err := id.Scan(task.ID); err != nil {
+		return fmt.Errorf("invalid id: %w", domain.ErrInvalidInput)
+	}
+
+	var assigneeID pgtype.UUID
+
+	if task.AssigneeID != nil {
+
+		if err := assigneeID.Scan(task.AssigneeID); err != nil {
+			return fmt.Errorf("invalid assigned_id: %w", domain.ErrInvalidInput)
+		}
+	}
+
+	_, err := r.queries.UpdateTask(ctx, generated.UpdateTaskParams{
+		ID:          id,
+		Title:       task.Title,
+		Description: task.Description,
+		Status:      string(task.Status),
+		AssigneeID:  assigneeID,
+	})
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return fmt.Errorf("task %s: %w", task.ID, domain.ErrNotFound)
+		}
+		return fmt.Errorf("updating task %s: %w", task.ID, err)
+	}
+
+	return nil
+}
+
+func toDomainTask(t generated.Task) *domain.Task {
+	task := &domain.Task{
+		ID:          t.ID.String(),
+		ProjectID:   t.ProjectID.String(),
+		Title:       t.Title,
+		Description: t.Description,
+		Status:      domain.TaskStatus(t.Status),
+		CreatedBy:   t.CreatedBy.String(),
+		CreatedAt:   t.CreatedAt.Time,
+		UpdatedAt:   t.UpdatedAt.Time,
+	}
+
+	if t.AssigneeID.Valid {
+		id := t.AssigneeID.String()
+		task.AssigneeID = &id
+	}
+
+	return task
 }
