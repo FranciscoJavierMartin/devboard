@@ -38,6 +38,46 @@ func NewJWTManager(cfg JWTConfig) (*JWTManager, error) {
 	return &JWTManager{cfg: cfg}, nil
 }
 
+func (m *JWTManager) GenerateAccessToken(userID, email, role string) (string, error) {
+	return m.generateToken(userID, email, role, m.cfg.AccessTokenDuration)
+}
+
+func (m *JWTManager) GenerateRefreshToken(userID, email, role string) (string, error) {
+	return m.generateToken(userID, email, role, m.cfg.RefreshTokenDuration)
+}
+
+func (m *JWTManager) VerifyToken(tokenString string) (*Claims, error) {
+	token, err := jwt.ParseWithClaims(
+		tokenString,
+		&Claims{},
+		func(t *jwt.Token) (any, error) {
+			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("unexpected algorithm: %v", t.Header["alg"])
+			}
+
+			return m.cfg.SecretKey, nil
+		},
+		jwt.WithExpirationRequired(),
+		jwt.WithIssuedAt(),
+	)
+
+	if err != nil {
+		if errors.Is(err, jwt.ErrTokenExpired) {
+			return nil, ErrTokenExpired
+		}
+
+		return nil, ErrTokenInvalid
+	}
+
+	claims, ok := token.Claims.(*Claims)
+
+	if !ok || !token.Valid {
+		return nil, ErrTokenInvalid
+	}
+
+	return claims, nil
+}
+
 func (m *JWTManager) generateToken(userID, email, role string, duration time.Duration) (string, error) {
 	now := time.Now()
 
