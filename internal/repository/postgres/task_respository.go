@@ -115,7 +115,7 @@ func (r *TaskRepository) ListByProject(ctx context.Context, projectID string) ([
 	tasks, err := r.queries.ListTasksByProject(ctx, pgProjectID)
 
 	if err != nil {
-		return nil, fmt.Errorf("retrieving tasks from project %s: %w", pgProjectID, err)
+		return nil, fmt.Errorf("retrieving tasks from project %s: %w", projectID, err)
 	}
 
 	tasksResponse := make([]*domain.Task, len(tasks))
