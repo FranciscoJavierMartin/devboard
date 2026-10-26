@@ -2,6 +2,7 @@ package usecases
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -97,4 +98,30 @@ func (uc *AuthUseCase) generateTokenPair(ctx context.Context, userID, email, rol
 		RefreshToken: refreshToken,
 		ExpiresIn:    15 * time.Minute,
 	}, nil
+}
+
+func (uc *AuthUseCase) Login(ctx context.Context, email, password string) (*AuthToken, error) {
+	user, err := uc.userRepo.GetByEmail(ctx, email)
+
+	if err != nil {
+		if errors.Is(err, domain.ErrNotFound) {
+			return nil, fmt.Errorf("invalid credentials: %w", domain.ErrUnauthorized)
+		}
+		return nil, fmt.Errorf("retrieving user: %w", err)
+	}
+
+	if err := auth.VerifyPassword(password, user.PasswordHash); err != nil {
+		if errors.Is(err, auth.ErrPasswordMissmatch) {
+			return nil, fmt.Errorf("invalid credentials: %w", domain.ErrUnauthorized)
+		}
+		return nil, fmt.Errorf("verifying password: %w", err)
+	}
+
+	tokens, err := uc.generateTokenPair(ctx, user.ID, user.Email, "member")
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tokens, nil
 }
