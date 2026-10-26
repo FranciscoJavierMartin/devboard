@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -199,6 +200,32 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 			"path", r.URL.Path,
 		)
 	}
+}
+
+// Logout endpoint
+//
+// @Summary     Sign out session
+// @Description Revoke user refresh token
+// @Tags        auth
+// @Accept      json
+// @Produce     json
+// @Param       request body refreshRequest true "Refresh token to be revoked"
+// @Success     204     "No content"
+// @Router      /auth/logout [post]
+func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
+	var req logoutRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		RespondError(w, r, h.logger, domain.ErrInvalidInput)
+		return
+	}
+
+	if err := h.usecase.Logout(context.Background(), req.RefreshToken); err != nil {
+		RespondError(w, r, h.logger, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func toTokenResponse(tokens *usecases.AuthToken) tokenResponse {
