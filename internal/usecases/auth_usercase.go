@@ -125,3 +125,33 @@ func (uc *AuthUseCase) Login(ctx context.Context, email, password string) (*Auth
 
 	return tokens, nil
 }
+
+func (uc *AuthUseCase) RefreshToken(ctx context.Context, refreshToken string) (*AuthToken, error) {
+	claims, err := uc.jwtManager.VerifyToken(refreshToken)
+
+	if err != nil {
+		return nil, fmt.Errorf("invalid refresh token: %w", domain.ErrUnauthorized)
+	}
+
+	_, err = uc.tokenStore.ValidateRefreshToken(ctx, claims.ID)
+
+	if err != nil {
+
+		if errors.Is(err, auth.ErrTokenRevoked) || errors.Is(err, auth.ErrTokenNotFound) {
+			return nil, fmt.Errorf("invalid refresh token: %w", domain.ErrUnauthorized)
+		}
+		return nil, fmt.Errorf("validating refresh token: %w", err)
+	}
+
+	if err := uc.tokenStore.RevokeRefreshToken(ctx, claims.ID, uc.refreshTokenDuration); err != nil {
+		return nil, fmt.Errorf("revoking previous token: %w", err)
+	}
+
+	tokens, err := uc.generateTokenPair(ctx, claims.ID, claims.Email, claims.Role)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tokens, nil
+}
