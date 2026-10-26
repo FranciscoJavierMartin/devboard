@@ -40,6 +40,46 @@ func RequireAuth(jwtManager *auth.JWTManager, logger *slog.Logger) Middleware {
 	}
 }
 
+func GetClaims(r *http.Request) *auth.Claims {
+	claims, _ := r.Context().Value(claimsKey).(*auth.Claims)
+	return claims
+}
+
+func GetUserID(r *http.Request) string {
+	claims := GetClaims(r)
+
+	if claims == nil {
+		return ""
+	}
+
+	return claims.UserID
+}
+
+func RequireRole(role string, logger *slog.Logger) Middleware {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			claims := GetClaims(r)
+
+			if claims == nil {
+				logger.ErrorContext(
+					r.Context(),
+					"RequireRole used without RequireAuth",
+					slog.String("path", r.URL.Path),
+				)
+				handler.RespondError(w, r, logger, domain.ErrUnauthorized)
+				return
+			}
+
+			if claims.Role != role {
+				handler.RespondError(w, r, logger, domain.ErrForbidden)
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
 func extractBearerToken(r *http.Request) (string, error) {
 	authHeader := r.Header.Get("Authorization")
 
