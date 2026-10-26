@@ -151,6 +151,56 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Refresh endpoint
+//
+// @Summary     Refresh tokens
+// @Description Renew the pair of tokens using a valid refresh token
+// @Tags        auth
+// @Accept      json
+// @Produce     json
+// @Param       request body     refreshRequest true "Refresh token"
+// @Success     200     {object} tokenResponse
+// @Failure     401     {object} ProblemDetails
+// @Router      /auth/refresh [post]
+func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
+	var req refreshRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		RespondError(w, r, h.logger, domain.ErrInvalidInput)
+		return
+	}
+
+	if errs := h.validator.Validate(req); errs != nil {
+		if err := RespondValidationError(w, errs); err != nil {
+			h.logger.ErrorContext(
+				r.Context(),
+				"error writing validation response",
+				"error", err,
+				"method", r.Method,
+				"path", r.URL.Path,
+			)
+		}
+		return
+	}
+
+	tokens, err := h.usecase.RefreshToken(r.Context(), req.RefreshToken)
+
+	if err != nil {
+		RespondError(w, r, h.logger, err)
+		return
+	}
+
+	if err := RespondJSON(w, http.StatusCreated, toTokenResponse(tokens)); err != nil {
+		h.logger.ErrorContext(
+			r.Context(),
+			"error writing JSON response",
+			"error", err,
+			"method", r.Method,
+			"path", r.URL.Path,
+		)
+	}
+}
+
 func toTokenResponse(tokens *usecases.AuthToken) tokenResponse {
 	return tokenResponse{
 		AccessToken:  tokens.AccessToken,
