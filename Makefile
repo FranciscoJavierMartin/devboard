@@ -4,7 +4,7 @@ MAIN_PATH=./cmd/api
 MIGRATE_PATH=./migrations
 DB_URL=postgresql://postgres:password@localhost:5432/devboard?sslmode=disable
 REDIS_ADDR=localhost:6379
-JWT_SECRET=testtest
+JWT_SECRET=testtesttesttesttesttesttesttest
 
 .PHONY: run build test lint migrate-create migrate-up migrate-down generate tidy help docs
 

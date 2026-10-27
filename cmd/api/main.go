@@ -111,6 +111,9 @@ func main() {
 	taskHandler := handler.NewTaskHandler(taskUC, validate, logger)
 	authHandler := handler.NewAuthHandler(authUC, validate, logger)
 
+	// Middleware auth
+	authMW := middlewares.RequireAuth(jwtManager, logger)
+
 	docsHandler, err := handler.NewDocsHandler(devboard.SwaggerJSON)
 	if err != nil {
 		logger.Error("Fatal error", "error", err)
@@ -119,19 +122,31 @@ func main() {
 
 	srv.RegisterRoutes("GET /docs", docsHandler)
 	srv.RegisterRoutes("GET /api/v1/health", healthHandler)
+	// Auth routes
+	srv.RegisterRoutes("POST /api/v1/auth/register", http.HandlerFunc(authHandler.Register))
+	srv.RegisterRoutes("POST /api/v1/auth/login", http.HandlerFunc(authHandler.Login))
+	srv.RegisterRoutes("POST /api/v1/auth/refresh", http.HandlerFunc(authHandler.Refresh))
+	srv.RegisterRoutes("POST /api/v1/auth/logout", http.HandlerFunc(authHandler.Logout))
 	// User routes
 	srv.RegisterRoutes("POST /api/v1/users", http.HandlerFunc(userHandler.Create))
 	srv.RegisterRoutes("GET /api/v1/users/{id}", http.HandlerFunc(userHandler.Get))
+	// Private routes
 	// Task routes
-	srv.RegisterRoutes("POST /api/v1/tasks", http.HandlerFunc(taskHandler.Create))
-	srv.RegisterRoutes("GET /api/v1/tasks/{id}", http.HandlerFunc(taskHandler.Get))
-	srv.RegisterRoutes("GET /api/v1/projects/{id}/tasks", http.HandlerFunc(taskHandler.ListByProject))
-	srv.RegisterRoutes("PUT /api/v1/tasks/{id}/assign", http.HandlerFunc(taskHandler.Assign))
-	srv.RegisterRoutes("PUT /api/v1/tasks/{id}/status", http.HandlerFunc(taskHandler.UpdateStatus))
+	srv.RegisterRoutes("POST /api/v1/tasks", middlewares.Chain(http.HandlerFunc(taskHandler.Create), authMW))
+	srv.RegisterRoutes("GET /api/v1/tasks/{id}", middlewares.Chain(http.HandlerFunc(taskHandler.Get), authMW))
+	srv.RegisterRoutes("GET /api/v1/projects/{id}/tasks", middlewares.Chain(http.HandlerFunc(taskHandler.ListByProject), authMW))
+	srv.RegisterRoutes("PUT /api/v1/tasks/{id}/assign", middlewares.Chain(http.HandlerFunc(taskHandler.Assign), authMW))
+	srv.RegisterRoutes("PUT /api/v1/tasks/{id}/status", middlewares.Chain(http.HandlerFunc(taskHandler.UpdateStatus), authMW))
 
 	srv.UseChain(
 		middlewares.Recovery(logger),
 		middlewares.Logger(logger),
+		middlewares.SecurityHeaders(middlewares.SecurityConfig{
+			AllowedOrigins: []string{
+				"http://localhost:8080",
+				"http://localhost:3000",
+			},
+		}),
 	)
 
 	if err := srv.Start(); err != nil {
