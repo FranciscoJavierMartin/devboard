@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/FranciscoJavierMartin/devboard/internal/auth"
 	"github.com/FranciscoJavierMartin/devboard/internal/domain"
 	"github.com/FranciscoJavierMartin/devboard/internal/usecases"
 	"github.com/FranciscoJavierMartin/devboard/internal/validator"
@@ -71,7 +72,12 @@ func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	passwordHash := "TEMPORAL_" + req.Password
+	passwordHash, err := auth.HashPassword(req.Password)
+
+	if err != nil {
+		RespondError(w, r, h.logger, domain.ErrInternal)
+		return
+	}
 
 	user, err := h.usecase.CreateUser(r.Context(), req.Email, req.Name, passwordHash)
 

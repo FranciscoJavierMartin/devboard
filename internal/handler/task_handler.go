@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/FranciscoJavierMartin/devboard/internal/domain"
+	"github.com/FranciscoJavierMartin/devboard/internal/middlewares"
 	"github.com/FranciscoJavierMartin/devboard/internal/usecases"
 	"github.com/FranciscoJavierMartin/devboard/internal/validator"
 )
@@ -98,7 +99,13 @@ func (h *TaskHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	task, err := h.usercase.CreateTask(r.Context(), req.ProjectID, req.Title, req.Description, "system")
+	userID := middlewares.GetUserID(r)
+	if userID == "" {
+		RespondError(w, r, h.logger, domain.ErrUnauthorized)
+		return
+	}
+
+	task, err := h.usercase.CreateTask(r.Context(), req.ProjectID, req.Title, req.Description, userID)
 	if err != nil {
 		RespondError(w, r, h.logger, err)
 		return
