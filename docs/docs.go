@@ -194,6 +194,11 @@ const docTemplate = `{
         },
         "/projects/{id}/tasks": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Returns all tasks that belongs to a project",
                 "produces": [
                     "application/json"
@@ -229,6 +234,11 @@ const docTemplate = `{
         },
         "/tasks": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create a new task",
                 "consumes": [
                     "application/json"
@@ -269,6 +279,11 @@ const docTemplate = `{
         },
         "/tasks/{id}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Retrieve a task by its ID",
                 "produces": [
                     "application/json"
@@ -304,6 +319,11 @@ const docTemplate = `{
         },
         "/tasks/{id}/assign": {
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Assign task to a team member",
                 "consumes": [
                     "application/json"
@@ -351,6 +371,11 @@ const docTemplate = `{
         },
         "/tasks/{id}/status": {
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Update task to a new status on the board",
                 "consumes": [
                     "application/json"
@@ -729,6 +754,14 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "Write Bearer token with format: Bearer {token}",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`

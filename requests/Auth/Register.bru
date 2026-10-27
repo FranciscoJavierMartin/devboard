@@ -1,0 +1,35 @@
+meta {
+  name: Register
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseURL}}/auth/register
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "email": "{{email}}",
+    "name": "John",
+    "password": "{{password}}"
+  }
+}
+
+vars:pre-request {
+  email: john@doe.com
+  password: testtest
+}
+
+vars:post-response {
+  accessToken: res.body.access_token
+  refreshToken: res.body.refresh_token
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+  forwardAuthorizationHeader: false
+}

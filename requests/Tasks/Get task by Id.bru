@@ -7,10 +7,15 @@ meta {
 get {
   url: {{baseURL}}/tasks/{{taskId}}
   body: none
-  auth: inherit
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
 }
 
 settings {
   encodeUrl: true
+  timeout: 0
   forwardAuthorizationHeader: false
 }

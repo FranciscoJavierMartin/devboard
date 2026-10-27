@@ -7,12 +7,16 @@ meta {
 post {
   url: {{baseURL}}/tasks
   body: json
-  auth: inherit
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
 }
 
 body:json {
   {
-    "project_id": "project_1",
+    "project_id": "431982c5-b8c7-4fd7-b04e-63484d97c6a8",
     "title": "Polaris",
     "description": "Description mock"
   }

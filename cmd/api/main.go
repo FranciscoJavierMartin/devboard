@@ -25,6 +25,11 @@ import (
 // @description API REST for project management
 // @host  localhost:8080
 // @BasePath /api/v1
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Write Bearer token with format: Bearer {token}
 func main() {
 
 	logger := setupLogger()

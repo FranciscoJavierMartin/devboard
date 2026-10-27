@@ -7,7 +7,11 @@ meta {
 put {
   url: {{baseURL}}/tasks/{{taskId}}/assign
   body: json
-  auth: inherit
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
 }
 
 body:json {
