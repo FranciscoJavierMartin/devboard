@@ -4,12 +4,13 @@ MAIN_PATH=./cmd/api
 MIGRATE_PATH=./migrations
 DB_URL=postgresql://postgres:password@localhost:5432/devboard?sslmode=disable
 REDIS_ADDR=localhost:6379
+JWT_SECRET=testtest
 
 .PHONY: run build test lint migrate-create migrate-up migrate-down generate tidy help docs
 
 ## run: Run app
 run:
-	GO_ENV=development DATABASE_URL=${DB_URL} REDIS_ADDR=${REDIS_ADDR} go run $(MAIN_PATH)/main.go
+	GO_ENV=development DATABASE_URL=${DB_URL} REDIS_ADDR=${REDIS_ADDR} JWT_SECRET=${JWT_SECRET} go run $(MAIN_PATH)/main.go
 
 ## build: Compile binary
 build:

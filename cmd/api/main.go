@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/FranciscoJavierMartin/devboard"
+	"github.com/FranciscoJavierMartin/devboard/internal/auth"
 	"github.com/FranciscoJavierMartin/devboard/internal/cache"
 	"github.com/FranciscoJavierMartin/devboard/internal/handler"
 	"github.com/FranciscoJavierMartin/devboard/internal/logger"
@@ -67,6 +68,22 @@ func main() {
 		}
 	}()
 
+	jwtSecret := os.Getenv("JWT_SECRET")
+	refreshTokenDuration := 7 * 24 * time.Hour
+
+	jwtManager, err := auth.NewJWTManager(auth.JWTConfig{
+		SecretKey:            []byte(jwtSecret),
+		AccessTokenDuration:  15 * time.Minute,
+		RefreshTokenDuration: refreshTokenDuration,
+	})
+
+	if err != nil {
+		logger.Error("error setting up JWT", slog.Any("error", err))
+		os.Exit(1)
+	}
+
+	tokenStore := auth.NewTokenStore(redisClient)
+
 	// Memory
 	// userRepo := memory.NewUserRepository()
 	// taskRepo := memory.NewTaskRepository()
@@ -76,6 +93,7 @@ func main() {
 
 	userUC := usecases.NewUserUseCase(userRepo)
 	taskUC := usecases.NewTaskUseCase(taskRepo, taskRepo)
+	authUC := usecases.NewAuthUseCase(userRepo, jwtManager, tokenStore, refreshTokenDuration)
 
 	validate := validator.New()
 	// notifier := notification.NewLogNotifier(log)
@@ -91,6 +109,7 @@ func main() {
 	healthHandler := handler.NewHealthHandler()
 	userHandler := handler.NewUserHandler(userUC, validate, logger)
 	taskHandler := handler.NewTaskHandler(taskUC, validate, logger)
+	authHandler := handler.NewAuthHandler(authUC, validate, logger)
 
 	docsHandler, err := handler.NewDocsHandler(devboard.SwaggerJSON)
 	if err != nil {
