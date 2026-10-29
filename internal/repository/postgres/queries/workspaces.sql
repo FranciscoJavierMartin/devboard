@@ -52,5 +52,5 @@ WHERE workspace_id = $1 AND user_id = $2
 RETURNING *;
 
 -- name: RemoveWorkspaceMember :exec
-DELETE workspace_members
+DELETE FROM workspace_members
 WHERE workspace_id = $1 AND user_id = $2;
