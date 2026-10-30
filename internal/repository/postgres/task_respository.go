@@ -25,12 +25,11 @@ func NewTaskRepository(pool *pgxpool.Pool) *TaskRepository {
 }
 
 func (r *TaskRepository) Create(ctx context.Context, task *domain.Task) error {
-	var projetID pgtype.UUID
+	var projetID, createdBy pgtype.UUID
 	if err := projetID.Scan(task.ProjectID); err != nil {
 		return fmt.Errorf("invalid project_id: %w", domain.ErrInvalidInput)
 	}
 
-	var createdBy pgtype.UUID
 	if err := createdBy.Scan(task.CreatedBy); err != nil {
 		return fmt.Errorf("invalid created_by: %w", domain.ErrInvalidInput)
 	}
