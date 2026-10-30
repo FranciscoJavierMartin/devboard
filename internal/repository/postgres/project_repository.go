@@ -78,6 +78,20 @@ func (r *ProjectRepository) ListByWorkspace(ctx context.Context, workspaceID str
 	if err := pgWsID.Scan(workspaceID); err != nil {
 		return nil, fmt.Errorf("invalid workspace_id: %w", domain.ErrInvalidInput)
 	}
+
+	projectsInDB, err := r.queries.ListProjectsByWorkspace(ctx, pgWsID)
+
+	if err != nil {
+		return nil, fmt.Errorf("retrieving projects from workspace %s: %w", workspaceID, err)
+	}
+
+	projects := make([]*domain.Project, len(projectsInDB))
+
+	for i, project := range projectsInDB {
+		projects[i] = toDomainProject(project)
+	}
+
+	return projects, nil
 }
 
 func toDomainProject(p generated.Project) *domain.Project {
