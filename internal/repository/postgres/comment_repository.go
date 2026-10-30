@@ -79,6 +79,20 @@ func (r *CommentRepository) ListByTask(ctx context.Context, taskID string) ([]*d
 		return nil, fmt.Errorf("invalid task_id: %w", domain.ErrInvalidInput)
 	}
 
+	commentsInDB, err := r.queries.ListCommentsByTask(ctx, pgTaskID)
+
+	if err != nil {
+		return nil, fmt.Errorf("retrieving comments from task %s: %w", taskID, err)
+	}
+
+	comments := make([]*domain.Comment, len(commentsInDB))
+
+	for i, comment := range commentsInDB {
+		comments[i] = toDomainComment(comment)
+	}
+
+	return comments, nil
+
 }
 
 func (r *CommentRepository) Delete(ctx context.Context, id string) error {
