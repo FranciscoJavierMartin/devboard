@@ -162,6 +162,19 @@ func (r *WorkspaceRepository) ListMembers(ctx context.Context, workspaceID strin
 	if err := pgWsID.Scan(workspaceID); err != nil {
 		return nil, fmt.Errorf("invalid workspace_id: %w", domain.ErrInvalidInput)
 	}
+
+	membersInDB, err := r.queries.ListWorkspaceMembers(ctx, pgWsID)
+
+	if err != nil {
+		return nil, fmt.Errorf("retrieving members from workspace: %w", err)
+	}
+
+	members := make([]*domain.WorkspaceMember, len(membersInDB))
+	for i, member := range membersInDB {
+		members[i] = toDomainMember(member)
+	}
+
+	return members, nil
 }
 
 func (r *WorkspaceRepository) RemoveMember(ctx context.Context, workspaceID, userID string) error {
