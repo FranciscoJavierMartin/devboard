@@ -2,10 +2,12 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/FranciscoJavierMartin/devboard/internal/domain"
 	generated "github.com/FranciscoJavierMartin/devboard/internal/repository/postgres/generated"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -58,6 +60,16 @@ func (r *CommentRepository) GetByID(ctx context.Context, id string) (*domain.Com
 		return nil, fmt.Errorf("invalid id: %s: %w", id, domain.ErrNotFound)
 	}
 
+	comment, err := r.queries.GetCommentByID(ctx, pgID)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, fmt.Errorf("comment %s: %w", id, domain.ErrNotFound)
+		}
+		return nil, fmt.Errorf("retrieving comment %s: %w")
+	}
+
+	return toDomainComment(comment), nil
 }
 
 func (r *CommentRepository) ListByTask(ctx context.Context, taskID string) ([]*domain.Comment, error) {
