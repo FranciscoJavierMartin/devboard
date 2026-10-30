@@ -62,7 +62,7 @@ func (r *WorkspaceRepository) GetWorkspaceByID(ctx context.Context, id string) (
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, fmt.Errorf("workspace %s: %w", id, domain.ErrNotFound)
 		}
-		return nil, fmt.Errorf("retrieving workspace %s: %w", id, domain.ErrNotFound)
+		return nil, fmt.Errorf("retrieving workspace %s: %w", id, err)
 	}
 
 	return toDomainWorkspace(workspace), nil
@@ -87,6 +87,20 @@ func (r *WorkspaceRepository) ListWorkspacesByUser(ctx context.Context, userID s
 	if err := pgUserID.Scan(userID); err != nil {
 		return nil, fmt.Errorf("invalid user_id: %w", domain.ErrInvalidInput)
 	}
+
+	workspacesInDB, err := r.queries.ListWorkspacesByUser(ctx, pgUserID)
+
+	if err != nil {
+		return nil, fmt.Errorf("retrieving workspaces by user %s: %w", userID, err)
+	}
+
+	var workspaces []*domain.Workspace = make([]*domain.Workspace, len(workspacesInDB))
+
+	for index, workspace := range workspacesInDB {
+		workspaces[index] = toDomainWorkspace(workspace)
+	}
+
+	return workspaces, nil
 }
 
 func (r *WorkspaceRepository) AddMember(ctx context.Context, member *domain.WorkspaceMember) error {
