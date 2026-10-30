@@ -140,6 +140,20 @@ func (r *WorkspaceRepository) GetMember(ctx context.Context, workspaceID, userID
 	if err := pgUserID.Scan(userID); err != nil {
 		return nil, fmt.Errorf("invalid user_id: %w", domain.ErrNotFound)
 	}
+
+	member, err := r.queries.GetWorkspaceMember(ctx, generated.GetWorkspaceMemberParams{
+		WorkspaceID: pgWsID,
+		UserID:      pgUserID,
+	})
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, fmt.Errorf("member not found: %w", domain.ErrNotFound)
+		}
+		return nil, fmt.Errorf("retrieving membership: %w", err)
+	}
+
+	return toDomainMember(member), nil
 }
 
 func (r *WorkspaceRepository) ListMembers(ctx context.Context, workspaceID string) ([]*domain.WorkspaceMember, error) {
