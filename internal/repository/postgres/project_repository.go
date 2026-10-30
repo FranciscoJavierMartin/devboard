@@ -2,10 +2,12 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/FranciscoJavierMartin/devboard/internal/domain"
 	generated "github.com/FranciscoJavierMartin/devboard/internal/repository/postgres/generated"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -58,6 +60,16 @@ func (r *ProjectRepository) GetByID(ctx context.Context, id string) (*domain.Pro
 		return nil, fmt.Errorf("invalid id %s: %w", id, domain.ErrNotFound)
 	}
 
+	project, err := r.queries.GetProjectByID(ctx, pgID)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, fmt.Errorf("project %s: %w", id, domain.ErrNotFound)
+		}
+		return nil, fmt.Errorf("retrieving project %s: %w", id, err)
+	}
+
+	return toDomainProject(project), nil
 }
 
 func (r *ProjectRepository) ListByWorkspace(ctx context.Context, workspaceID string) ([]*domain.Project, error) {
