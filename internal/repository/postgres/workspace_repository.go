@@ -2,10 +2,12 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/FranciscoJavierMartin/devboard/internal/domain"
 	generated "github.com/FranciscoJavierMartin/devboard/internal/repository/postgres/generated"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -48,7 +50,22 @@ func (r *WorkspaceRepository) CreateWorkspace(ctx context.Context, ws *domain.Wo
 }
 
 func (r *WorkspaceRepository) GetWorkspaceByID(ctx context.Context, id string) (*domain.Workspace, error) {
+	var pgID pgtype.UUID
 
+	if err := pgID.Scan(id); err != nil {
+		return nil, fmt.Errorf("invalid id %s: %w", id, domain.ErrNotFound)
+	}
+
+	workspace, err := r.queries.GetWorkspaceByID(ctx, pgID)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, fmt.Errorf("workspace %s: %w", id, domain.ErrNotFound)
+		}
+		return nil, fmt.Errorf("retrieving workspace %s: %w", id, domain.ErrNotFound)
+	}
+
+	return toDomainWorkspace(workspace), nil
 }
 
 func (r *WorkspaceRepository) GetWorkspaceBySlug(ctx context.Context, slug string) (*domain.Workspace, error) {
