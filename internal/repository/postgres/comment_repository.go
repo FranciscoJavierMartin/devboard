@@ -102,6 +102,7 @@ func (r *CommentRepository) Delete(ctx context.Context, id string) error {
 		return fmt.Errorf("invalid id: %w", domain.ErrInvalidInput)
 	}
 
+	return r.queries.DeleteComment(ctx, pgID)
 }
 
 func toDomainComment(c generated.Comment) *domain.Comment {
