@@ -113,6 +113,21 @@ func (r *WorkspaceRepository) AddMember(ctx context.Context, member *domain.Work
 	if err := userID.Scan(member.UserID); err != nil {
 		return fmt.Errorf("invalid user_id: %w", domain.ErrInvalidInput)
 	}
+
+	workspace, err := r.queries.AddWorkspaceMember(ctx, generated.AddWorkspaceMemberParams{
+		WorkspaceID: wsID,
+		UserID:      userID,
+		Role:        string(member.Role),
+	})
+
+	if err != nil {
+		return fmt.Errorf("adding member to workspace: %w", err)
+	}
+
+	member.ID = workspace.ID.String()
+	member.JoinedAt = workspace.JoinedAt.Time
+
+	return nil
 }
 
 func (r *WorkspaceRepository) GetMember(ctx context.Context, workspaceID, userID string) (*domain.WorkspaceMember, error) {
