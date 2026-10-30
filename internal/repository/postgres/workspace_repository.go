@@ -69,7 +69,16 @@ func (r *WorkspaceRepository) GetWorkspaceByID(ctx context.Context, id string) (
 }
 
 func (r *WorkspaceRepository) GetWorkspaceBySlug(ctx context.Context, slug string) (*domain.Workspace, error) {
+	workspace, err := r.queries.GetWorkspaceBySlug(ctx, slug)
 
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, fmt.Errorf("workspace %s: %w", slug, domain.ErrNotFound)
+		}
+		return nil, fmt.Errorf("retrieving workspace %s: %w", slug, err)
+	}
+
+	return toDomainWorkspace(workspace), nil
 }
 
 func (r *WorkspaceRepository) ListWorkspacesByUser(ctx context.Context, userID string) ([]*domain.Workspace, error) {
