@@ -187,6 +187,11 @@ func (r *WorkspaceRepository) RemoveMember(ctx context.Context, workspaceID, use
 	if err := pgUserID.Scan(userID); err != nil {
 		return fmt.Errorf("invalid user_id: %w", domain.ErrInvalidInput)
 	}
+
+	return r.queries.RemoveWorkspaceMember(ctx, generated.RemoveWorkspaceMemberParams{
+		WorkspaceID: pgWsID,
+		UserID:      pgUserID,
+	})
 }
 
 func toDomainWorkspace(w generated.Workspace) *domain.Workspace {
